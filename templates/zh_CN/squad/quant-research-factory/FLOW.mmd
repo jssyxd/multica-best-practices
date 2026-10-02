@@ -1,0 +1,101 @@
+flowchart TB
+    classDef step fill:#e8f5e9,stroke:#2e7d32,stroke-width:1.5px,color:#000
+    classDef reviewer fill:#fff3e0,stroke:#ef6c00,stroke-width:2px,color:#000
+    classDef patrol fill:#e3f2fd,stroke:#1565c0,stroke-width:2px,color:#000
+    classDef scribe fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#000
+    classDef fail fill:#ffebee,stroke:#c62828,stroke-width:2px,color:#000
+    classDef human fill:#eceff1,stroke:#455a64,stroke-width:2px,color:#000
+    classDef deploy fill:#e0f7fa,stroke:#00838f,stroke-width:1.5px,color:#000
+    classDef watch fill:#fffde7,stroke:#f9a825,stroke-width:2px,color:#000
+
+    WD[WatchdogAgent<br/>每1h扫 GitHub Issues 领取]:::watch --> Start
+    Start([新想法 / GitHub Issue / 市场观察]) --> S1
+
+    subgraph S1["① 数据 Data"]
+        D1[DataAgent]
+    end
+    S1 --> R1
+    subgraph R1["审核员-1"]
+        C1[无前视 / 披露日 / 复权停牌 / 缺失处理]
+    end
+    R1 -->|全过| S2
+    R1 -->|失败| Fail1[打回] --> S1
+
+    subgraph S2["② 假设"]
+        H1[HypothesisAgent]
+    end
+    S2 --> R2
+    subgraph R2["审核员-2"]
+        C2[先于数据 / 可证伪 / 非画靶 / Credal]
+    end
+    R2 -->|全过| S3
+    R2 -->|失败| Fail2[打回] --> S2
+
+    subgraph S3["③ 因子"]
+        F1[FactorResearcher]
+    end
+    S3 --> R3
+    subgraph R3["审核员-3"]
+        C3[规模中性 / 标准化 / 风格剥离 / 暴露报告]
+    end
+    R3 -->|全过| S4
+    R3 -->|失败| Fail3[打回] --> S3
+
+    subgraph S4["④ 模型"]
+        M1[ModelAgent]
+    end
+    S4 --> R4
+    subgraph R4["审核员-4"]
+        C4[简单优先 / 参数可控 / 可解释 / 非黑盒]
+    end
+    R4 -->|全过| S5
+    R4 -->|失败| Fail4[打回] --> S4
+
+    subgraph S5["⑤ 回测"]
+        B1[RD-Agent + Nautilus 同库]
+    end
+    S5 --> R5
+    subgraph R5["审核员-5"]
+        C5[全周期 / 真实成本 / OOS / 双引擎一致 / 无调参美化]
+    end
+    R5 -->|全过| S6
+    R5 -->|失败| Fail5[打回] --> S5
+
+    subgraph S6["⑥ 执行"]
+        E1[冲击 / 流动性 / 容量]
+    end
+    S6 --> R6
+    subgraph R6["审核员-6"]
+        C6[冲击 / 涨跌停流动性 / 容量 / 偏差]
+    end
+    R6 -->|全过| S7
+    R6 -->|失败| Fail6[打回] --> S6
+
+    subgraph S7["⑦ 复盘下线"]
+        RV1[审计 + 写死熔断]
+    end
+    S7 --> R7
+    subgraph R7["审核员-7"]
+        C7[审计 / 漂移监控 / KILL写死 / 可执行]
+    end
+    R7 -->|全过| Deploy
+    R7 -->|失败| Fail7[打回] --> S7
+
+    subgraph Deploy["部署模拟"]
+        DEP[Deploy + VibeShell]
+        MON[Monitor]
+        DEP --> MON
+    end
+    Deploy --> Live{稳定?}
+    Live -->|是| Real[小资金→大资金]
+    Live -->|熔断| Offline[降权/暂停/下线]
+
+    PA[PatrolA 1-2-3] -.-> S1 & S2 & S3
+    PB[PatrolB 4-5-6] -.-> S4 & S5 & S6
+    PC[PatrolC 7+部署] -.-> S7 & Deploy
+    Scribe[Scribe 记卡点] -.-> S1 & S2 & S3 & S4 & S5 & S6 & S7 & Deploy
+
+    R2 -.-> Human1[Human 确认假设]
+    R5 -.-> Human2[Human 确认OOS]
+    R7 -.-> Human3[Human 确认熔断]
+    Real -.-> Human4[Human 放行实盘]
